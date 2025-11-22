@@ -21,4 +21,10 @@ router.post('/deposit', userController.deposit);
 //POST /api/withdraw/ - Withdraw
 router.post('/withdraw', userController.withdraw);
 
+//GET /api/Transactions/:userID - ViewTransactions
+router.get('/Transactions/:userID', userController.viewTransactions);
+
+//GET /api/Loan/:userID - ViewPendingLoan
+router.get('/Loan/:userID', userController.viewPendingLoan);
+
 module.exports = router;

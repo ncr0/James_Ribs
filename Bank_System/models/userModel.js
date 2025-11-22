@@ -6,7 +6,7 @@ const User = {
   // Get Account Details by ID
   getAccount: (id) => {
     return new Promise((resolve, reject) => {
-      database.query('SELECT * FROM tblUsers WHERE UserID = ?', [id], (err, results) => {
+      database.query('SELECT * FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
         // if (results.length === 0) return resolve(null);
         resolve(results);
@@ -55,7 +55,7 @@ const User = {
   deposit: (transactionData) => {
     return new Promise((resolve, reject) => {
       const {UserID, FullName, Email, Type, Amount, Status, Date} = transactionData;
-      database.query('Insert tblTransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Deposit", ?, "Pending", CURDATE())', 
+      database.query('Insert tbltransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Deposit", ?, "Pending", CURDATE())', 
         [UserID, FullName, Email, Type, Amount, Status, Date], 
         (err, results) => {
         if (err) return reject(err);
@@ -67,7 +67,7 @@ const User = {
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
       const {UserID, FullName, Email, Type, Amount, Status, Date} = transactionData;
-      database.query('Insert tblTransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Withdrawal", ?, "Pending", CURDATE())', 
+      database.query('Insert tbltransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Withdrawal", ?, "Pending", CURDATE())', 
         [UserID, FullName, Email, Type, Amount, Status, Date], 
         (err, results) => {
         if (err) return reject(err);
@@ -77,6 +77,24 @@ const User = {
         resolve({id: results.insertId, ...transactionData});
       });
     });
+  },
+  //GET viewTransactionsById
+  viewTransactionsById: (id) => {
+    return new Promise((resolve, reject) => {
+      database.query('SELECT * FROM tbltransactions WHERE UserID = ?', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    })
+  },
+  //GET viewPendingLoanById
+  viewPendingLoanById: (id) => {
+    return new Promise((resolve, reject) => {
+      database.query('SELECT * FROM tblloans WHERE UserID = ? AND Status = "Pending"', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    })
   }
 };
 

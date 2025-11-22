@@ -28,7 +28,7 @@ getAccountDetails: async (req, res) => {
 // viewBalance
 viewBalance: async (req, res) => {
   try {
-    // const userId = req.params.id; 
+    //const userId = req.params.id; 
     const balance = await User.viewBalanceById(req.params.userID);
 
     if (!balance) {
@@ -177,6 +177,50 @@ viewBalance: async (req, res) => {
                  message: 'Error processing withdrawal', 
                  error: error.message
          });
+        }
+    },
+    //viewTransactions
+    viewTransactions: async (req, res) => {
+        try {
+            const transactions = await User.viewTransactionsById(req.params.userID);
+            if (!transactions) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User ID not found'
+                });
+            }
+            res.json({
+                success: true,
+                data: transactions
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching data',
+                error: error.message
+            });
+        }
+    },
+    //viewPendingLoan
+    viewPendingLoan: async (req, res) => {
+        try {
+            const pendingloan = await User.viewPendingLoanById(req.params.userID);
+            if (!pendingLoan) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User ID not found'
+                });
+            }
+            res.json({
+                success: true,
+                data: pendingLoan
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching data',
+                error: error.message
+            });
         }
     }
 };
