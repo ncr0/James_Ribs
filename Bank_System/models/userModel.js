@@ -1,15 +1,15 @@
 //david la gabana
 
-const database = require('./database');
+const database = require('../database');
 
 const User = {
   // Get Account Details by ID
-  getAccountDetails: (id) => {
+  getAccount: (id) => {
     return new Promise((resolve, reject) => {
-      database.query('SELECT * FROM users WHERE id = ?', [id], (err, results) => {
-        if (err) return reject(err);
-        if (results.length === 0) return resolve(null);
-        resolve(results[0]);
+      database.query('SELECT * FROM tblUsers WHERE UserID = ?', [id], (err, results) => {
+        if (err) reject(err);
+        // if (results.length === 0) return resolve(null);
+        resolve(results);
       });
     });
   },
@@ -17,58 +17,64 @@ const User = {
   // GET view Balance by ID
   viewBalanceById: (id) => {
     return new Promise((resolve, reject) => {
-      database.query('SELECT balance FROM users WHERE id = ?', [id], (err, results) => {
-        if (err) return reject(err);
-        if (results.length === 0) return resolve(null);
-        resolve(results[0].Balance);
+      database.query('SELECT balance FROM tblusers WHERE UserID = ?', [id], (err, results) => {
+        if (err) reject(err);
+        // if (results.length === 0) return resolve(null);
+        resolve(results);
       });
     });
   },
 
   // updateAccountInfo
-  updateAccountInfo: (userData) => {
+  updateAccountInfo: (UserID, userData) => {
     return new Promise((resolve, reject) => {
-      const {fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status, id} = userData;
-      database.query = 'UPDATE users SET fullName = ?, balance = ?, age = ?, address = ?, dateOfBirth = ?, gender = ?, contactNumber = ?, emailAddress = ?, Status = ? WHERE id = ?',
-    [fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status, id],
+      const {fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress} = userData;
+      database.query( 'UPDATE tblusers SET fullName = ?, age = ?, address = ?, dateOfBirth = ?, gender = ?, contactNumber = ?, emailAddress = ? WHERE UserID = ?',
+    [fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress, UserID],
       (err, results) => {
-        if (err) return reject(err);
-        resolve({id: id, ...userData});
+        if (err) reject(err);
+        resolve(results);
       }
+      );
     });
   },
   // applyLoan
   applyLoan: (userData) => {
     return new Promise((resolve, reject) => {
       const {fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status} = userData;
-      database.query = 'INSERT INTO loans (fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      database.query('INSERT INTO tblloans (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date) VALUES (?, ?, ?, ?, ?, ?)',
     [fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status],
       (err, results) => {
         if (err) return reject(err);
         resolve({id: results.insertId, ...userData});
       }
+      );
     });
   },
   //deposit
-  deposit: (UserID, Amount) => {
+  deposit: (transactionData) => {
     return new Promise((resolve, reject) => {
-      database.query('UPDATE users SET Balance = Balance + ? WHERE id = ?', 
-        [Amount, UserID], (err, results) => {
+      const {UserID, FullName, Email, Type, Amount, Status, Date} = transactionData;
+      database.query('Insert tblTransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Deposit", ?, "Pending", CURDATE())', 
+        [UserID, FullName, Email, Type, Amount, Status, Date], 
+        (err, results) => {
         if (err) return reject(err);
-        resolve(results);
+        resolve({id: results.insertId, ...transactionData});
       });
     });
   },
   //withdraw
-  withdraw: (UserID, Amount) => { 
+  withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
-      database.query('UPDATE users SET Balance = Balance - ? WHERE id = ? AND Balance >= ?', 
-        [Amount, UserID, Amount], (err, results) => {
+      const {UserID, FullName, Email, Type, Amount, Status, Date} = transactionData;
+      database.query('Insert tblTransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Withdrawal", ?, "Pending", CURDATE())', 
+        [UserID, FullName, Email, Type, Amount, Status, Date], 
+        (err, results) => {
         if (err) return reject(err);
         if (results.affectedRows === 0) {
           return reject(new Error('Not enough funds or user not found'));
         }
-        resolve(results);
+        resolve({id: results.insertId, ...transactionData});
       });
     });
   }

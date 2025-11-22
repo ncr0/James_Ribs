@@ -5,34 +5,48 @@ const userController = {
 //Get Account Details
 getAccountDetails: async (req, res) => {
     try {
-        const userID = req.params.id;
-        User.getAccountDetails(userID, (err, user) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error retrieving user details', error: err });
-            }
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            res.status(200).json({ user });
-        }
-        );
+        // const { UserID } = req.params;
+      const details = await User.getAccount(req.params.userID);
+      if (!details) {
+        return res.status(404).json({
+          success: false,
+          message: 'User ID not found'
+        });
+      }
+      res.json({
+        success: true,
+        data: details
+      });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching data',
+        error: error.message
+      });
     }
 },
 // viewBalance
 viewBalance: async (req, res) => {
   try {
-    const userId = req.params.id; 
-    const balance = await User.viewBalanceById(userId);
+    // const userId = req.params.id; 
+    const balance = await User.viewBalanceById(req.params.userID);
 
-    if (balance === null) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!balance) {
+      return res.status(404).json({
+          success: false,
+          message: 'User ID not found'
+        });
     }
-    res.status(200).json({ userId, balance });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error retrieving balance', error: err.message });
+    res.json({
+        success: true,
+        data: balance
+      });
+  } catch (error) {
+    res.status(500).json({
+        success: false,
+        message: 'Error fetching data',
+        error: error.message
+    });
   }
 },
 
