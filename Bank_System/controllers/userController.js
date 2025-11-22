@@ -182,11 +182,21 @@ viewBalance: async (req, res) => {
     //viewTransactions
     viewTransactions: async (req, res) => {
         try {
-            const transactions = await User.viewTransactionsById(req.params.userID);
-            if (!transactions) {
+            const userID = req.params.userID;
+            const exist = await User.getAccount(userID);
+            // check if user exists
+            if (!exist) {
                 return res.status(404).json({
                     success: false,
                     message: 'User ID not found'
+                });
+            }
+            const transactions = await User.viewTransactionsById(userID);
+            // check if user has transaction history
+            if (transactions.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No transactions found for this user'
                 });
             }
             res.json({

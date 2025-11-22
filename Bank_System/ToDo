@@ -1,10 +1,13 @@
 -USER-
 get account details - DONE
 get balance - DONE
-Update Account Info - DONE
-applyLoan - DONE
-deposit - DONE
-withdraw - DONE
+Update Account Info - 
+applyLoan - 
+deposit - 
+withdraw - 
 viewTransactions - DONE
+- add empty result handling - DONE
+- added user validation - DONE
 viewPendingLoan - DONE
+- add empty result handling - DONE
 payLoan - 

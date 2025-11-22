@@ -9,7 +9,7 @@ const User = {
       database.query('SELECT * FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
         // if (results.length === 0) return resolve(null);
-        resolve(results);
+        resolve(results[0]);
       });
     });
   },
