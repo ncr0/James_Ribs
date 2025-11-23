@@ -1,5 +1,5 @@
-//david le gabana
 const User = require('../models/userModel');
+const database = require('../database');  // for checking existing loans
 
 const userController = {
 //Get Account Details
@@ -53,33 +53,34 @@ viewBalance: async (req, res) => {
   // update Accountinfo
   updateAccountInfo: async (req, res ) => {
     try {
-        const {fullName, balance, age, address, dateofBirth, gender, contactNumber, emailAddress, Status} = req.body;
-        const userID = req.params.id;
+        const {FullName, Age, Address, DateofBirth, Gender, ContactNumber, EmailAddress} = req.body;
+        const userID = req.params.userID;
+        
 
-        const existingUser = await User.findById(userID);
+        // user checker
+        const existingUser = await User.getAccount(userID);
         if (!existingUser) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
-        if (!fullName || !balance || !age || !address || !dateOfBirth || !gender || !contactNumber || !emailAddress || !Status) {
+        // validation
+        if (!FullName|| !Age || !Address || !DateofBirth || !Gender || !ContactNumber || !EmailAddress) {
             return res.status(400).json({
                 success: false,
-                message: 'All fields (fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status) are required'
+                message: 'All fields are required (fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress)'
             });
         }
-        await User.updateAccountInfo(userID,
-            fullName,
-            balance,
-            age,
-            address,
-            dateOfBirth,    
-            gender,
-            contactNumber,
-            emailAddress,
-            Status
-            );
+        await User.updateAccountInfo(userID, {
+            FullName,
+            Age,
+            Address,
+            DateofBirth,    
+            Gender,
+            ContactNumber,
+            EmailAddress
+        });
         res.status(200).json({
             success: true,
             message: 'User account information updated successfully'
@@ -96,28 +97,48 @@ viewBalance: async (req, res) => {
     //applyLoan
     applyLoan: async (req, res) => {
         try {
-            const {fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status} = req.body;
-            
-            if (!fullName || !balance || !age || !address || !dateOfBirth || !gender || !contactNumber || !emailAddress || !Status) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'All fields (fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status) are required'
+            const {UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status} = req.body;
+            const userID = req.params.userID;
+            // user checker
+            const existingUser = await User.getAccount(userID);
+            if (!existingUser) {
+                return res.status(404).json({
+                success: false,
+                message: 'User not found'
                 });
             }
-            const newLoanApplication = {
-                fullName,
-                balance,
-                age,
-                address,
-                dateOfBirth,
-                gender,
-                contactNumber,
-                emailAddress,
-                Status
-            };
+            // check pending /active loans
+            const existingLoans = await database.promise().query('SELECT * FROM tblloans WHERE UserID = ? AND (Status = "Pending" OR Status = "Active")',
+                [userID]
+            );
+
+            if (existingLoans.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You already have an active or pending loan'
+            });
+            }
+            // validation
+            if (!UserID || !LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'All fields  are required (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome)'
+                });
+            }
+            // months to pay limit 3 years (36 months)
+            if(MonthsToPay > 36) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Months to pay cannot exceed 36 months'
+                });
+            }
+            const newLoanApplication = await User.applyLoan({
+                UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status
+            });
             res.status(201).json({
                 success: true,
                 message: 'Loan application submitted successfully',
+                status: 'Pending',
                 loanApplication: newLoanApplication
             });
         } catch (error) {
@@ -131,19 +152,48 @@ viewBalance: async (req, res) => {
     // deposit
     deposit: async (req, res) => {
         try {
-            const { userId, Amount } = req.body;
-            if (!userId || !Amount || Amount <= 0) {
-                return res.status(400).json({ message: 'Invalid user ID or amount' });
+            const {UserID,FullName, Email, Amount} = req.body;
+            const userID = req.params.userID;
+            // check user
+            const user = await User.getAccount(userID);
+                if (!user || user.UserID != UserID) {
+                    return res.status(404).json({
+                        success: false,
+                        message: ["User not found or does", "not match with the UserID in the body"]
+                    });
+                }
+            // check amount
+            if(!Amount || Amount <= 0) {
+                return res.status(400).json(
+                    { success: false,
+                      message: "Invalid amount (must be greater than 0)"
+                    }
+                );
             }
-            const user = await User.getAccountDetails(userId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+            // input validation
+            if(!FullName || !Email || !Amount) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'All fields are required (FullName, Email, Amount)'
+                });
             }
-            const newBalance = user.Balance + Amount;
-            await User.updateAccountInfo({ id: userId, Balance: newBalance });
+            // check for pending deposits
+            const [pendingDeposits] = await database.promise().query(
+                'SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Deposit" AND Status = "Pending"',
+                [userID]
+            );
+            if (pendingDeposits.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You have a pending deposit request. Please wait for it to be processed before making a new deposit.'
+                });
+            }
+             
+            const result = await User.deposit({UserID, FullName, Email, Amount});
             res.status(200).json({ 
-                message: 'Deposit successful', 
-                newBalance 
+                success: true,
+                message: 'Deposit Pending Approval', 
+                data: result 
             });
         } catch (error) {
             res.status(500).json({
@@ -155,26 +205,53 @@ viewBalance: async (req, res) => {
     //withdraw
     withdraw: async (req, res) => {
         try {
-            const { userId, Amount } = req.body;
-            if (!userId || !Amount || Amount <= 0) {
-                return res.status(400).json({ message: 'Invalid user ID or amount' });
+            const {UserID,FullName, Email, Amount} = req.body;
+            const userID = req.params.userID;
+            // check user
+            const user = await User.getAccount(userID);
+                if (!user || user.UserID != UserID) {
+                    return res.status(404).json({
+                        success: false,
+                        message: ["User not found", "or does not match with the UserID in the body"]
+                    });
+                }
+            // check balance
+            const balanceData = await User.viewBalanceById(userID);
+            const balance = balanceData.balance || 0;
+            if(Amount > balance) {
+                return res.status(400).json({
+                    success: false,
+                    message: ['Insufficient funds for this withdrawal', `Current balance: ${balance}`]
+                });
             }
-            const user = await User.getAccountDetails(userId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+            // input validation
+            if(!FullName || !Email || !Amount) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'All fields are required (FullName, Email, Amount)'
+                });
             }
-            if (user.balance < Amount) {
-                return res.status(400).json({ message: 'Not enough balance' });
+            // check for pending deposits
+            const [pendingWithdrawal] = await database.promise().query(
+                'SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Withdrawal" AND Status = "Pending"',
+                [userID]
+            );
+            if (pendingWithdrawal.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You have a pending Withdraw request. Please wait for it to be processed before making a new request.'
+                });
             }
-            const newBalance = user.Balance - Amount;
-            await User.updateAccountInfo({ id: userId, Balance: newBalance });
+             
+            const result = await User.withdraw({UserID, FullName, Email, Amount});
             res.status(200).json({ 
-                message: 'Withdrawal successful', 
-                newBalance 
+                success: true,
+                message: ['Withdrawal Pending for Approval', 'please go to the nearest bank to receive your cash'], 
+                data: result 
             });
         } catch (error) {
             res.status(500).json({
-                 message: 'Error processing withdrawal', 
+                 message: 'Error processing Withdrawal', 
                  error: error.message
          });
         }
@@ -214,16 +291,58 @@ viewBalance: async (req, res) => {
     //viewPendingLoan
     viewPendingLoan: async (req, res) => {
         try {
-            const pendingloan = await User.viewPendingLoanById(req.params.userID);
-            if (!pendingLoan) {
+            const userID = req.params.userID;
+            const exist = await User.getAccount(userID);
+            // check if user exists
+            if (!exist) {
                 return res.status(404).json({
                     success: false,
                     message: 'User ID not found'
                 });
             }
+            const pendingLoan = await User.viewPendingLoanById(userID);
+            // check if user has loan history
+            if (pendingLoan.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No Pending Loan found for this user'
+                });
+            }
             res.json({
                 success: true,
                 data: pendingLoan
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching data',
+                error: error.message
+            });
+        }
+    },
+    //viewActiveLoan
+    viewActiveLoan: async (req, res) => {
+        try {
+            const userID = req.params.userID;
+            const exist = await User.getAccount(userID);
+            // check if user exists
+            if (!exist) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User ID not found'
+                });
+            }
+            const activeLoan = await User.viewActiveLoans(userID);
+            // check if user has loan history
+            if (activeLoan.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No Active Loan found for this user'
+                });
+            }
+            res.json({
+                success: true,
+                data: activeLoan
             });
         } catch (error) {
             res.status(500).json({

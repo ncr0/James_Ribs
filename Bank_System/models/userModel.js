@@ -1,5 +1,3 @@
-//david la gabana
-
 const database = require('../database');
 
 const User = {
@@ -20,7 +18,7 @@ const User = {
       database.query('SELECT balance FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
         // if (results.length === 0) return resolve(null);
-        resolve(results);
+        resolve(results[0]);
       });
     });
   },
@@ -28,9 +26,10 @@ const User = {
   // updateAccountInfo
   updateAccountInfo: (UserID, userData) => {
     return new Promise((resolve, reject) => {
-      const {fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress} = userData;
-      database.query( 'UPDATE tblusers SET fullName = ?, age = ?, address = ?, dateOfBirth = ?, gender = ?, contactNumber = ?, emailAddress = ? WHERE UserID = ?',
-    [fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress, UserID],
+      
+      const {FullName, Age, Address, DateofBirth, Gender, ContactNumber, EmailAddress} = userData;
+      database.query( 'UPDATE tblusers SET FullName = ?, Age = ?, Address = ?, DateOfBirth = ?, Gender = ?, ContactNumber = ?, EmailAddress = ? WHERE UserID = ?',
+    [FullName, Age, Address, DateofBirth, Gender, ContactNumber, EmailAddress, UserID],
       (err, results) => {
         if (err) reject(err);
         resolve(results);
@@ -41,11 +40,11 @@ const User = {
   // applyLoan
   applyLoan: (userData) => {
     return new Promise((resolve, reject) => {
-      const {fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status} = userData;
-      database.query('INSERT INTO tblloans (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date) VALUES (?, ?, ?, ?, ?, ?)',
-    [fullName, balance, age, address, dateOfBirth, gender, contactNumber, emailAddress, Status],
+      const {UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status} = userData;
+      database.query('INSERT INTO tblloans (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status) VALUES (?, ?, ?, ?, ?, CURDATE(), "Pending")',
+    [UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status],
       (err, results) => {
-        if (err) return reject(err);
+        if (err) reject(err);
         resolve({id: results.insertId, ...userData});
       }
       );
@@ -54,11 +53,11 @@ const User = {
   //deposit
   deposit: (transactionData) => {
     return new Promise((resolve, reject) => {
-      const {UserID, FullName, Email, Type, Amount, Status, Date} = transactionData;
-      database.query('Insert tbltransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Deposit", ?, "Pending", CURDATE())', 
-        [UserID, FullName, Email, Type, Amount, Status, Date], 
+      const {UserID, FullName, Email, Amount, Type, Status, DateofTransaction} = transactionData;
+      database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "Deposit", "Pending", CURDATE())', 
+        [UserID, FullName, Email, Amount, Type, Status, DateofTransaction], 
         (err, results) => {
-        if (err) return reject(err);
+        if (err) reject(err);
         resolve({id: results.insertId, ...transactionData});
       });
     });
@@ -66,14 +65,11 @@ const User = {
   //withdraw
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
-      const {UserID, FullName, Email, Type, Amount, Status, Date} = transactionData;
-      database.query('Insert tbltransactions (UserID, FullName, Email, Type, Amount, Status, Date) VALUES (?, ?, ?, "Withdrawal", ?, "Pending", CURDATE())', 
-        [UserID, FullName, Email, Type, Amount, Status, Date], 
+      const {UserID, FullName, Email, Amount, Type, Status, DateofTransaction} = transactionData;
+      database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "WITHDRAWAL", "Pending", CURDATE())', 
+        [UserID, FullName, Email, Amount, Type, Status, DateofTransaction], 
         (err, results) => {
-        if (err) return reject(err);
-        if (results.affectedRows === 0) {
-          return reject(new Error('Not enough funds or user not found'));
-        }
+        if (err) reject(err);
         resolve({id: results.insertId, ...transactionData});
       });
     });
@@ -87,7 +83,7 @@ const User = {
       });
     })
   },
-  //GET viewPendingLoanById
+  //GET viewPendingLoanById 
   viewPendingLoanById: (id) => {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tblloans WHERE UserID = ? AND Status = "Pending"', [id], (err, results) => {
@@ -95,7 +91,26 @@ const User = {
         resolve(results);
       });
     })
-  }
+  },
+  //GET viewActiveLoans 
+  viewActiveLoans: (id) => {
+    return new Promise((resolve, reject) => {
+      database.query('SELECT * FROM tblloans WHERE UserID = ? AND Status = "Active"', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    })
+  },
+  // pay loan
+  // payLoan: (loanData) => {
+  //   return new Promise((resolve, reject) => {
+  //     const {UserID, LoanID, PaymentAmount, DateofPayment} = loanData;
+
+  // })
+  // }
 };
+  
+  
+
 
 module.exports = User;

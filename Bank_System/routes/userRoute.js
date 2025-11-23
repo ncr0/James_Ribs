@@ -1,4 +1,3 @@
-// david la gabana
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
@@ -10,21 +9,24 @@ router.get('/AccountDetails/:userID', userController.getAccountDetails);
 router.get('/balance/:userID', userController.viewBalance);
 
 // PUT /api/User/:userID - Update Account Info
-router.put('/:userID', userController.updateAccountInfo);
+router.put('/Update/:userID', userController.updateAccountInfo);
 
-// POST /api/loan/ - Apply for a Loan
-router.post('/loan', userController.applyLoan);
+// POST /api/Applyloan/:userID - Apply for a Loan
+router.post('/ApplyLoan/:userID', userController.applyLoan);
 
-// POST /api/deposit/ - Deposit
-router.post('/deposit', userController.deposit);
+// POST /api/deposit/:userID - Deposit
+router.post('/deposit/:userID', userController.deposit);
 
-//POST /api/withdraw/ - Withdraw
-router.post('/withdraw', userController.withdraw);
+//POST /api/withdraw/:userID - Withdraw
+router.post('/withdraw/:userID', userController.withdraw);
 
 //GET /api/Transactions/:userID - ViewTransactions
 router.get('/Transactions/:userID', userController.viewTransactions);
 
-//GET /api/Loan/:userID - ViewPendingLoan
-router.get('/Loan/:userID', userController.viewPendingLoan);
+//GET /api/PendingLoan/:userID - ViewPendingLoan
+router.get('/PendingLoan/:userID', userController.viewPendingLoan);
+
+//GET /api/ActiveLoan/:userID - ViewPendingLoan
+router.get('/ActiveLoan/:userID', userController.viewActiveLoan);
 
 module.exports = router;
