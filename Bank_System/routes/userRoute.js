@@ -5,28 +5,31 @@ const userController = require('../controllers/userController');
 // GET /api/User/:userID - Get Account Details
 router.get('/AccountDetails/:userID', userController.getAccountDetails);
 
-// GET /api/balance/:userID - View Balance 
+// GET /api/User/balance/:userID - View Balance 
 router.get('/balance/:userID', userController.viewBalance);
 
 // PUT /api/User/:userID - Update Account Info
 router.put('/Update/:userID', userController.updateAccountInfo);
 
-// POST /api/Applyloan/:userID - Apply for a Loan
+// POST /api/User/Applyloan/:userID - Apply for a Loan
 router.post('/ApplyLoan/:userID', userController.applyLoan);
 
-// POST /api/deposit/:userID - Deposit
+// POST /api/User/deposit/:userID - Deposit
 router.post('/deposit/:userID', userController.deposit);
 
-//POST /api/withdraw/:userID - Withdraw
+//POST /api/User/withdraw/:userID - Withdraw
 router.post('/withdraw/:userID', userController.withdraw);
 
-//GET /api/Transactions/:userID - ViewTransactions
+//GET /api/User/Transactions/:userID - ViewTransactions
 router.get('/Transactions/:userID', userController.viewTransactions);
 
-//GET /api/PendingLoan/:userID - ViewPendingLoan
+//GET /api/User/PendingLoan/:userID - ViewPendingLoan
 router.get('/PendingLoan/:userID', userController.viewPendingLoan);
 
-//GET /api/ActiveLoan/:userID - ViewPendingLoan
+//GET /api/User/ActiveLoan/:userID - ViewPendingLoan
 router.get('/ActiveLoan/:userID', userController.viewActiveLoan);
+
+// POST /api/User/PayLoan/:userID - Pay Loan
+router.put('/PayLoan/:userID', userController.payLoan);
 
 module.exports = router;

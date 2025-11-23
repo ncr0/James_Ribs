@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-const database = require('../database');  // for checking existing loans
+const database = require('../database');  // for some direct queries - helps automation
 
 const userController = {
 //Get Account Details
@@ -108,15 +108,16 @@ viewBalance: async (req, res) => {
                 });
             }
             // check pending /active loans
-            const existingLoans = await database.promise().query('SELECT * FROM tblloans WHERE UserID = ? AND (Status = "Pending" OR Status = "Active")',
-                [userID]
-            );
+            const pendingLoans = await User.viewPendingLoanById(userID)
 
-            if (existingLoans.length > 0) {
-                return res.status(400).json({
+            if (pendingLoans.length === 0) {
+                const activeLoans = await User.viewActiveLoans(userID);
+                if (activeLoans.length > 0) {
+                    return res.status(400).json({
                     success: false,
                     message: 'You already have an active or pending loan'
-            });
+                    });
+                }
             }
             // validation
             if (!UserID || !LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
@@ -231,7 +232,7 @@ viewBalance: async (req, res) => {
                     message: 'All fields are required (FullName, Email, Amount)'
                 });
             }
-            // check for pending deposits
+            // check for pending withdrawals
             const [pendingWithdrawal] = await database.promise().query(
                 'SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Withdrawal" AND Status = "Pending"',
                 [userID]
@@ -301,7 +302,7 @@ viewBalance: async (req, res) => {
                 });
             }
             const pendingLoan = await User.viewPendingLoanById(userID);
-            // check if user has loan history
+            // check if user has Pending loans
             if (pendingLoan.length === 0) {
                 return res.status(404).json({
                     success: false,
@@ -333,7 +334,7 @@ viewBalance: async (req, res) => {
                 });
             }
             const activeLoan = await User.viewActiveLoans(userID);
-            // check if user has loan history
+            // check if user has active loan
             if (activeLoan.length === 0) {
                 return res.status(404).json({
                     success: false,
@@ -351,7 +352,71 @@ viewBalance: async (req, res) => {
                 error: error.message
             });
         }
+    },
+    //payLoan
+    payLoan: async (req, res) => {
+        try {
+            const {Amount} = req.body;
+            const userID = req.params.userID;
+            const exist = await User.getAccount(userID);
+            // check if user exists
+            if (!exist) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User ID not found'
+                });
+            }
+            // check if user has active loan
+            const activeLoan = await User.viewActiveLoans(userID);
+            if (activeLoan.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No Active Loan found for this user'
+                });
+            }
+            const balanceData = await User.viewBalanceById(userID);
+            const balance = balanceData.balance || 0;
+
+            // check if balance is sufficient
+            if (balance < Amount) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Insufficient funds to make the loan payment'
+                });
+            }
+            // check if payment exceeds remaining balance
+            const remainingBalance = activeLoan[0].RemainingBalance || 0;
+            if (Amount > remainingBalance) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Payment failed. The amount exceeds the remaining balance of ${remainingBalance}.`
+                });
+            }
+            // check if loan is already fully paid
+            
+                if (remainingBalance <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Loan is already fully paid. No payment required.'
+                    });
+                }
+            // process loan payment
+            
+                await User.payLoan(userID, {Amount});
+                res.json({
+                    success: true,
+                    message: 'Loan payment processed successfully',
+                    
+                });
+            
+        }
+        catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error processing loan payment',
+                error: error.message
+            });
+        }
     }
 };
-
 module.exports = userController;

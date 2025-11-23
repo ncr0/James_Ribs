@@ -6,7 +6,7 @@
   applyLoan - DONE
   deposit - DONE
     - added pending deposit check - DONE
-  withdraw - 
+  withdraw - DONE
   viewTransactions - DONE
     - add empty result handling - DONE
     - added user validation - DONE
@@ -15,7 +15,7 @@
     - add empty result handling - DONE
     - added user validation - DONE
   viewActiveLoan - DONE
-  payLoan - 
+  payLoan - DONE
 
 -ADMIN-
   getUsers

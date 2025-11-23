@@ -101,16 +101,38 @@ const User = {
       });
     })
   },
-  // pay loan
-  // payLoan: (loanData) => {
-  //   return new Promise((resolve, reject) => {
-  //     const {UserID, LoanID, PaymentAmount, DateofPayment} = loanData;
+  // pay loan 
+  payLoan: (userID, loanData) => {
+    const {Amount} = loanData;
+    return new Promise((resolve, reject) => {
+      
+      // update loan remaining balance
+        database.query('UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
+      [Amount, userID],
+      (err, loanResult) => {
+        if (err) return reject(err);
 
-  // })
-  // }
-};
+        // update user balance
+        database.query('UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
+          [Amount, userID],
+          (err, userResult) => {
+            if (err) return reject(err);
+
+            // 3. Resolve promise with both results
+            resolve({
+              loanUpdated: loanResult,
+              balanceUpdated: userResult
+            });
+          }
+        );
+      }
+    
+      
+    )
+  })
+  }
+}
+
   
   
-
-
 module.exports = User;
