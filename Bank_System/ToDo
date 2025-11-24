@@ -1,0 +1,48 @@
+-USER-
+  get account details - DONE
+  get balance - DONE
+  Update Account Info - DONE
+    - issue with the date fields ("DateofBirth": 1912-12-11T16:00:00.000Z instead of 1912-12-12) - DONE
+  applyLoan - DONE
+  deposit - DONE
+    - added pending deposit check - DONE
+  withdraw - DONE
+  viewTransactions - DONE
+    - add empty result handling - DONE
+    - added user validation - DONE
+    - add pending transactions -
+  viewPendingLoan - DONE
+    - add empty result handling - DONE
+    - added user validation - DONE
+  viewActiveLoan - DONE
+  payLoan - DONE
+
+-ADMIN-
+  getUsers
+    -by ID
+    -by Status
+  addUser
+  deleteUser
+  approveDeposit
+  approveWithdrawal
+  approveLoan
+  getTransactions
+    -by ID
+    -by Type
+    -by Status
+  getLoans
+    -by Status
+    -by ID
+
+
+
+
+
+
+
+
+
+(not included in final project)
+  -FUTURE IMPROVEMENTS- 
+    - Implement authentication so users can only access their own data.
+    - add frontend (maybe)
