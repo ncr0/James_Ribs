@@ -97,7 +97,7 @@ viewBalance: async (req, res) => {
     //applyLoan
     applyLoan: async (req, res) => {
         try {
-            const {UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status} = req.body;
+            const {LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status} = req.body;
             const userID = req.params.userID;
             // user checker
             const existingUser = await User.getAccount(userID);
@@ -120,10 +120,10 @@ viewBalance: async (req, res) => {
                 }
             }
             // validation
-            if (!UserID || !LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
+            if (!LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
                 return res.status(400).json({
                     success: false,
-                    message: 'All fields  are required (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome)'
+                    message: 'All fields  are required (LoanAmount, MonthsToPay, Reason, MonthlyIncome)'
                 });
             }
             // months to pay limit 3 years (36 months)
@@ -134,7 +134,7 @@ viewBalance: async (req, res) => {
                 });
             }
             const newLoanApplication = await User.applyLoan({
-                UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status
+                userID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status
             });
             res.status(201).json({
                 success: true,
@@ -153,11 +153,11 @@ viewBalance: async (req, res) => {
     // deposit
     deposit: async (req, res) => {
         try {
-            const {UserID,FullName, Email, Amount} = req.body;
+            const {FullName, Email, Amount} = req.body;
             const userID = req.params.userID;
             // check user
             const user = await User.getAccount(userID);
-                if (!user || user.UserID != UserID) {
+                if (!user) {
                     return res.status(404).json({
                         success: false,
                         message: ["User not found or does", "not match with the UserID in the body"]
@@ -187,7 +187,7 @@ viewBalance: async (req, res) => {
                 });
             }
              
-            const result = await User.deposit({UserID, FullName, Email, Amount});
+            const result = await User.deposit({userID, FullName, Email, Amount});
             res.status(200).json({ 
                 success: true,
                 message: 'Deposit Pending Approval', 
@@ -203,11 +203,11 @@ viewBalance: async (req, res) => {
     //withdraw
     withdraw: async (req, res) => {
         try {
-            const {UserID,FullName, Email, Amount} = req.body;
+            const {FullName, Email, Amount} = req.body;
             const userID = req.params.userID;
             // check user
             const user = await User.getAccount(userID);
-                if (!user || user.UserID != UserID) {
+                if (!user) {
                     return res.status(404).json({
                         success: false,
                         message: ["User not found", "or does not match with the UserID in the body"]
@@ -238,7 +238,7 @@ viewBalance: async (req, res) => {
                 });
             }
              
-            const result = await User.withdraw({UserID, FullName, Email, Amount});
+            const result = await User.withdraw({userID, FullName, Email, Amount});
             res.status(200).json({ 
                 success: true,
                 message: ['Withdrawal Pending for Approval', 'please go to the nearest bank to receive your cash'], 

@@ -53,12 +53,12 @@ const User = {
   //deposit
   deposit: (transactionData) => {
     return new Promise((resolve, reject) => {
-      const {UserID, FullName, Email, Amount, Type, Status, DateofTransaction} = transactionData;
+      const {userID, FullName, Email, Amount} = transactionData;
       database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "Deposit", "Pending", CURDATE())', 
-        [UserID, FullName, Email, Amount, Type, Status, DateofTransaction], 
+        [userID, FullName, Email, Amount], 
         (err, results) => {
         if (err) reject(err);
-        resolve({id: results.insertId, ...transactionData});
+        resolve({TransactionID: results.insertId, ...transactionData});
       });
     });
   },
@@ -73,12 +73,12 @@ const User = {
   //withdraw
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
-      const {UserID, FullName, Email, Amount, Type, Status, DateofTransaction} = transactionData;
+      const {userID, FullName, Email, Amount} = transactionData;
       database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "WITHDRAWAL", "Pending", CURDATE())', 
-        [UserID, FullName, Email, Amount, Type, Status, DateofTransaction], 
+        [userID, FullName, Email, Amount], 
         (err, results) => {
         if (err) reject(err);
-        resolve({id: results.insertId, ...transactionData});
+        resolve({TransactionID: results.insertId, ...transactionData});
       });
     });
   },
