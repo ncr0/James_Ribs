@@ -6,7 +6,6 @@ const User = {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
-        // if (results.length === 0) return resolve(null);
         resolve(results[0]);
       });
     });
@@ -17,7 +16,6 @@ const User = {
     return new Promise((resolve, reject) => {
       database.query('SELECT balance FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
-        // if (results.length === 0) return resolve(null);
         resolve(results[0]);
       });
     });
@@ -50,7 +48,7 @@ const User = {
       );
     });
   },
-  //deposit
+  // Deposit
   deposit: (transactionData) => {
     return new Promise((resolve, reject) => {
       const {userID, FullName, Email, Amount} = transactionData;
@@ -62,6 +60,7 @@ const User = {
       });
     });
   },
+  // View Pending Deposit
   viewPendingDeposit: (id) => {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Deposit" AND Status = "Pending"', [id], (err, results) => {
@@ -70,7 +69,7 @@ const User = {
       });
     })
   },
-  //withdraw
+  // Withdraw
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
       const {userID, FullName, Email, Amount} = transactionData;
@@ -82,6 +81,7 @@ const User = {
       });
     });
   },
+  // View Pending Withdrawal
   viewPendingWithdrawal: (id) => {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Withdrawal" AND Status = "Pending"', [id], (err, results) => {

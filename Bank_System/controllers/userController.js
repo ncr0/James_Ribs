@@ -5,7 +5,6 @@ const userController = {
 //Get Account Details
 getAccountDetails: async (req, res) => {
     try {
-        // const { UserID } = req.params;
       const details = await User.getAccount(req.params.userID);
       if (!details) {
         return res.status(404).json({
@@ -28,7 +27,6 @@ getAccountDetails: async (req, res) => {
 // viewBalance
 viewBalance: async (req, res) => {
   try {
-    //const userId = req.params.id; 
     const balance = await User.viewBalanceById(req.params.userID);
 
     if (!balance) {

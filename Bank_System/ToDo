@@ -18,18 +18,18 @@
   payLoan - DONE
 
 -ADMIN-
-  getUsers
-    -by ID
-    -by Status
-  addUser
-  deleteUser
-  approveDeposit
+  getUsers - DONE
+    -by ID - DONE
+    -by Status - DONE
+  addUser - DONE
+  deleteUser - DONE
+  approveDeposit 
   approveWithdrawal
   approveLoan
-  getTransactions
-    -by ID
-    -by Type
-    -by Status
+  getTransactions - DONE
+    -by ID - DONE
+    -by Type - DONE
+    -by Status - DONE
   getLoans
     -by Status
     -by ID

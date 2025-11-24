@@ -29,7 +29,7 @@ router.get('/PendingLoan/:userID', userController.viewPendingLoan);
 //GET /api/User/ActiveLoan/:userID - ViewPendingLoan
 router.get('/ActiveLoan/:userID', userController.viewActiveLoan);
 
-// POST /api/User/PayLoan/:userID - Pay Loan
+// put /api/User/PayLoan/:userID - Pay Loan
 router.put('/PayLoan/:userID', userController.payLoan);
 
 module.exports = router;
