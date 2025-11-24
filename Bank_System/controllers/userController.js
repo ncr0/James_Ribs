@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-const database = require('../database');  // for some direct queries - helps automation
+
 
 const userController = {
 //Get Account Details
@@ -179,10 +179,7 @@ viewBalance: async (req, res) => {
                 });
             }
             // check for pending deposits
-            const [pendingDeposits] = await database.promise().query(
-                'SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Deposit" AND Status = "Pending"',
-                [userID]
-            );
+            const pendingDeposits = await User.viewPendingDeposit(userID);
             if (pendingDeposits.length > 0) {
                 return res.status(400).json({
                     success: false,
@@ -233,10 +230,7 @@ viewBalance: async (req, res) => {
                 });
             }
             // check for pending withdrawals
-            const [pendingWithdrawal] = await database.promise().query(
-                'SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Withdrawal" AND Status = "Pending"',
-                [userID]
-            );
+            const pendingWithdrawal = await User.viewPendingWithdrawal(userID);
             if (pendingWithdrawal.length > 0) {
                 return res.status(400).json({
                     success: false,
@@ -389,7 +383,7 @@ viewBalance: async (req, res) => {
             if (Amount > remainingBalance) {
                 return res.status(400).json({
                     success: false,
-                    message: `Payment failed. The amount exceeds the remaining balance of ${remainingBalance}.`
+                    message: [`Payment failed. The amount exceeds the remaining balance of ${remainingBalance}.`, 'Please enter a valid amount.']
                 });
             }
             // check if loan is already fully paid
@@ -406,6 +400,8 @@ viewBalance: async (req, res) => {
                 res.json({
                     success: true,
                     message: 'Loan payment processed successfully',
+                    paidAmount: Amount,
+                    RemainingBalance: remainingBalance - Amount
                     
                 });
             

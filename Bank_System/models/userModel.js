@@ -62,6 +62,14 @@ const User = {
       });
     });
   },
+  viewPendingDeposit: (id) => {
+    return new Promise((resolve, reject) => {
+      database.query('SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Deposit" AND Status = "Pending"', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    })
+  },
   //withdraw
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
@@ -73,6 +81,14 @@ const User = {
         resolve({id: results.insertId, ...transactionData});
       });
     });
+  },
+  viewPendingWithdrawal: (id) => {
+    return new Promise((resolve, reject) => {
+      database.query('SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Withdrawal" AND Status = "Pending"', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    })
   },
   //GET viewTransactionsById
   viewTransactionsById: (id) => {
@@ -117,8 +133,6 @@ const User = {
           [Amount, userID],
           (err, userResult) => {
             if (err) return reject(err);
-
-            // 3. Resolve promise with both results
             resolve({
               loanUpdated: loanResult,
               balanceUpdated: userResult
@@ -126,12 +140,11 @@ const User = {
           }
         );
       }
-    
-      
     )
   })
   }
 }
+
 
   
   
