@@ -16,6 +16,7 @@
     - added user validation - DONE
   viewActiveLoan - DONE
   payLoan - DONE
+    - auto update status if fully paid - DONE
 
 -ADMIN-
   getUsers - DONE
@@ -30,9 +31,9 @@
     -by ID - DONE
     -by Type - DONE
     -by Status - DONE
-  getLoans
-    -by Status
-    -by ID
+  getLoans - DONE
+    -by Status - DONE
+    -by ID - DONE
 
 
 

@@ -29,4 +29,13 @@ router.get('/Transactions/type/:Type', bankTellerController.getTransactionByType
 // GET /api/Admin/Transactions/status/:status - Get Transactions by Status
 router.get('/Transactions/status/:status', bankTellerController.getTransactionByStatus);
 
+// GET /api/Admin/Loans - Get All Loans
+router.get('/Loans', bankTellerController.getAllLoans);
+
+// GET /api/Admin/Loans/:loanID - Get Loan by ID
+router.get('/Loans/:userID', bankTellerController.getLoanByID);
+
+// GET /api/Admin/Loans/status/:status - Get Loans by Status
+router.get('/Loans/status/:status', bankTellerController.getLoanByStatus);
+
 module.exports = router;

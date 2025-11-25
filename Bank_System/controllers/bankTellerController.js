@@ -246,6 +246,77 @@ const bankTellerController = {
       });
     }
   },
+
+  // Get All Loans
+  getAllLoans: async (req, res) => {
+    try {
+      const loans = await Admin.getAllLoans();
+      res.json({
+        success: true,
+        data: loans
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching transactions',
+        error: error.message
+      });
+      }
+  },
+  // Get Loan by ID
+  getLoanByID: async (req, res) => {
+    try {
+      const userLoan = await Admin.getLoanByID(req.params.userID);
+      if (!userLoan) {
+        return res.status(404).json({
+          success: false,
+          message: 'User ID not found'
+        });
+      }
+      res.json({
+        success: true,
+        data: userLoan
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching Loan by User ID',
+        error: error.message
+      });
+    }
+  },
+  // Get Loan by Status
+  getLoanByStatus: async (req, res) => {
+    try {
+      const { status } = req.params;
+      const statusData = await Admin.getLoanByStatus(status);
+      
+      // Validation for Type
+      if((status !== 'Pending' && status !== 'pending') && (  status !== 'Active' && status !== 'active') && (status !== 'Denied' && status !== 'denied') && (status !== 'Finished' && status !== 'finished')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid Status. Please use pending, active, denied, or finished.'
+        });
+      }
+      // Check if any users found
+      if(statusData.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'No Users found with the specified Status'
+        });
+      }
+      res.json({
+        success: true,
+        data: statusData
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching Loans by Status',
+        error: error.message
+      });
+    }
+  },
 }
 
 module.exports = bankTellerController;

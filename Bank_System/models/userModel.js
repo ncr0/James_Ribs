@@ -119,30 +119,66 @@ const User = {
   },
   // pay loan 
   payLoan: (userID, loanData) => {
-    const {Amount} = loanData;
-    return new Promise((resolve, reject) => {
-      
-      // update loan remaining balance
-        database.query('UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
+  const { Amount } = loanData;
+
+  return new Promise((resolve, reject) => {
+
+    // 1. Deduct from RemainingBalance
+    database.query(
+      'UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
       [Amount, userID],
-      (err, loanResult) => {
+      (err, loanUpdate) => {
         if (err) return reject(err);
 
-        // update user balance
-        database.query('UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
+        // 2. Deduct from user Balance
+        database.query(
+          'UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
           [Amount, userID],
-          (err, userResult) => {
+          (err, balanceUpdate) => {
             if (err) return reject(err);
-            resolve({
-              loanUpdated: loanResult,
-              balanceUpdated: userResult
-            });
+
+            // 3. Check if RemainingBalance is now 0
+            database.query(
+              'SELECT RemainingBalance FROM tblloans WHERE UserID = ? AND Status = "Active"',
+              [userID],
+              (err, checkResult) => {
+                if (err) return reject(err);
+
+                const remaining = checkResult[0]?.RemainingBalance || 0;
+
+                if (remaining <= 0) {
+                  // 4. Update status to Finished
+                  database.query(
+                    'UPDATE tblloans SET Status = "Finished" WHERE UserID = ? AND Status = "Active"',
+                    [userID],
+                    (err, finishUpdate) => {
+                      if (err) return reject(err);
+
+                      return resolve({
+                        loanUpdated: loanUpdate,
+                        balanceUpdated: balanceUpdate,
+                        loanFinished: true
+                      });
+                    }
+                  );
+                } else {
+                  // Loan not yet fully paid
+                  return resolve({
+                    loanUpdated: loanUpdate,
+                    balanceUpdated: balanceUpdate,
+                    loanFinished: false
+                  });
+                }
+              }
+            );
           }
         );
       }
-    )
-  })
-  }
+    );
+  });
+
+  },
+  // updateLoanstatus
 }
 
 

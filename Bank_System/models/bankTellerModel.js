@@ -95,5 +95,33 @@ const Admin = {
       });
     });
   },
+
+  // Get All Loans
+  getAllLoans: () => {
+    return new Promise((resolve, reject) => {
+      db.query('SELECT * FROM tblloans',(err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    });
+  },
+  // GET Loan by UserID 
+  getLoanByID: (id) => {
+    return new Promise((resolve, reject) => {
+      db.query('SELECT * FROM tblloans WHERE UserID = ?', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results[0]);
+      });
+    });
+  },
+  // Get Loans by Status
+  getLoanByStatus: (status) => {
+    return new Promise((resolve, reject) => {
+      db.query('SELECT * FROM tblloans WHERE Status = ?', [status], (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      });
+    });
+  },
 }
 module.exports = Admin;
