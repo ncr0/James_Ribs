@@ -17,6 +17,15 @@ router.post('/createUser', bankTellerController.createUser);
 // DELETE /api/Admin/User/:userID - Delete User Account
 router.delete('/User/:userID', bankTellerController.deleteUser);
 
+// PUT /api/Admin/approveDeposit/:transactionID - Approve Deposit
+router.put('/approveDeposit/:transactionID', bankTellerController.approveDeposit);
+
+// PUT /api/Admin/approveWithdrawal/:transactionID - Approve Withdrawal
+router.put('/approveWithdrawal/:transactionID', bankTellerController.approveWithdrawal);
+
+// PUT /api/Admin/approveLoan/:loanID - Approve Loan
+router.put('/approveLoan/:userID', bankTellerController.approveLoan);
+
 // GET /api/Admin/Transactions - Get All Transactions
 router.get('/Transactions', bankTellerController.getAllTransactions);
 

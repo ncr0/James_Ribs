@@ -17,19 +17,19 @@ router.post('/ApplyLoan/:userID', userController.applyLoan);
 // POST /api/User/deposit/:userID - Deposit
 router.post('/deposit/:userID', userController.deposit);
 
-//POST /api/User/withdraw/:userID - Withdraw
+// POST /api/User/withdraw/:userID - Withdraw
 router.post('/withdraw/:userID', userController.withdraw);
 
-//GET /api/User/Transactions/:userID - ViewTransactions
+// GET /api/User/Transactions/:userID - ViewTransactions
 router.get('/Transactions/:userID', userController.viewTransactions);
 
-//GET /api/User/PendingLoan/:userID - ViewPendingLoan
+// GET /api/User/PendingLoan/:userID - ViewPendingLoan
 router.get('/PendingLoan/:userID', userController.viewPendingLoan);
 
-//GET /api/User/ActiveLoan/:userID - ViewPendingLoan
+// GET /api/User/ActiveLoan/:userID - ViewActiveLoan
 router.get('/ActiveLoan/:userID', userController.viewActiveLoan);
 
-// put /api/User/PayLoan/:userID - Pay Loan
+// PUT /api/User/PayLoan/:userID - Pay Loan
 router.put('/PayLoan/:userID', userController.payLoan);
 
 module.exports = router;

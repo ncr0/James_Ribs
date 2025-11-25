@@ -1,5 +1,5 @@
 const db = require('../database');
-const { get } = require('../routes/bankTellerRoute');
+
 
 const Admin = {
   // Get All Users
@@ -53,12 +53,93 @@ const Admin = {
     });
   },
   
-  // Approve Deposit - to be added later
+  // GET Transactions by transactionID - helps with deposit/withdrawal approval
+  getTransactionByTransactionID: (id) => {
+    return new Promise((resolve, reject) => {
+      db.query('SELECT * FROM tbltransactions WHERE TransactionID = ?', [id], (err, results) => {
+        if (err) reject(err);
+        resolve(results[0]);
+      });
+    });
+  },
+  // Approve Deposit 
+  approveDeposit: (transactionID) => {
+    return new Promise((resolve, reject) => {
+      db.query('SELECT * FROM tbltransactions WHERE TransactionID = ?', [transactionID], (err, results) => {
+        if (err) reject(err);
+        
+        const {UserID, Amount, status} = results[0];
+        
+        db.query('UPDATE tbltransactions SET Status = "Approved" WHERE TransactionID = ?', [transactionID], (err, statusResult) => {
+          if (err) return reject(err);
 
-  // Approve Withdrawal - to be added later
+        db.query('UPDATE tblusers SET Balance = Balance + ? WHERE UserID = ?', [Amount, UserID], (err) => {
+          if (err) return reject(err);
+        
+        resolve({
+          TransactionID: transactionID,
+          UserID: UserID,
+          Amount: Amount,
+          Status: 'Approved'});
+      });
+    });
+        
+    });
+  
+  });
+  },
 
-  // Approve Loan - to be added later
+  // Approve Deposit 
+  approveWithdrawal: (transactionID) => {
+    return new Promise((resolve, reject) => {
+      db.query('SELECT * FROM tbltransactions WHERE TransactionID = ?', [transactionID], (err, results) => {
+        if (err) reject(err);
+        
+        const {UserID, Amount, status} = results[0];
+        
+        db.query('UPDATE tbltransactions SET Status = "Approved" WHERE TransactionID = ?', [transactionID], (err, statusResult) => {
+          if (err) return reject(err);
 
+        db.query('UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?', [Amount, UserID], (err) => {
+          if (err) return reject(err);
+        
+        resolve({
+          TransactionID: transactionID,
+          UserID: UserID,
+          Amount: Amount,
+          Status: 'Approved'});
+      });
+    });
+  
+    });
+  
+  });
+  },
+
+  // Get Loan By Loan ID - helps approve loan
+  // getLoanByLoanID: (id) => {
+  //   return new Promise((resolve, reject) => {
+  //     db.query('SELECT * FROM tblloans WHERE LoanID = ?', [id], (err, results) => {
+  //       if (err) reject(err);
+  //       resolve(results[0]);
+  //     });
+  //   });
+  // },
+
+  // Approve Loan
+  approveLoan: (UserID, loanData) => {
+    return new Promise((resolve, reject) => {
+      
+      const {InterestRate, totalAmount, MonthlyPayment} = loanData;
+      db.query( 'UPDATE tblloans SET InterestRate = ?, totalAmount = ?, MonthlyPayment = ?, RemainingBalance = ?, Status = "Active" WHERE UserID = ?',
+    [InterestRate, totalAmount, MonthlyPayment, totalAmount, UserID],
+      (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      }
+      );
+    });
+  },
   // Get All Transactions
   getAllTransactions: () => {
     return new Promise((resolve, reject) => {

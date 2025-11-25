@@ -24,9 +24,9 @@
     -by Status - DONE
   addUser - DONE
   deleteUser - DONE
-  approveDeposit 
-  approveWithdrawal
-  approveLoan
+  approveDeposit -  DONE
+  approveWithdrawal - DONE
+  approveLoan - DONE
   getTransactions - DONE
     -by ID - DONE
     -by Type - DONE

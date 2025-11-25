@@ -38,9 +38,9 @@ const User = {
   // applyLoan
   applyLoan: (userData) => {
     return new Promise((resolve, reject) => {
-      const {UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status} = userData;
+      const {userID, LoanAmount, MonthsToPay, Reason, MonthlyIncome} = userData;
       database.query('INSERT INTO tblloans (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status) VALUES (?, ?, ?, ?, ?, CURDATE(), "Pending")',
-    [UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status],
+    [userID, LoanAmount, MonthsToPay, Reason, MonthlyIncome],
       (err, results) => {
         if (err) reject(err);
         resolve({id: results.insertId, ...userData});
@@ -73,7 +73,7 @@ const User = {
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
       const {userID, FullName, Email, Amount} = transactionData;
-      database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "WITHDRAWAL", "Pending", CURDATE())', 
+      database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "Withdrawal", "Pending", CURDATE())', 
         [userID, FullName, Email, Amount], 
         (err, results) => {
         if (err) reject(err);
@@ -117,62 +117,57 @@ const User = {
       });
     })
   },
-  // pay loan 
+  // Pay loan 
   payLoan: (userID, loanData) => {
   const { Amount } = loanData;
 
   return new Promise((resolve, reject) => {
 
-    // 1. Deduct from RemainingBalance
-    database.query(
-      'UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
+    // update loan remaining balance
+    database.query('UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
       [Amount, userID],
       (err, loanUpdate) => {
-        if (err) return reject(err);
+      if (err) return reject(err);
 
-        // 2. Deduct from user Balance
-        database.query(
-          'UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
+      // update user balance
+      database.query('UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
           [Amount, userID],
           (err, balanceUpdate) => {
-            if (err) return reject(err);
+          if (err) return reject(err);
 
-            // 3. Check if RemainingBalance is now 0
-            database.query(
-              'SELECT RemainingBalance FROM tblloans WHERE UserID = ? AND Status = "Active"',
-              [userID],
-              (err, checkResult) => {
-                if (err) return reject(err);
+            // check balance
+          database.query('SELECT RemainingBalance FROM tblloans WHERE UserID = ? AND Status = "Active"',
+          [userID],
+          (err, checkResult) => {
+          if (err) return reject(err);
 
-                const remaining = checkResult[0]?.RemainingBalance || 0;
+          const remaining = checkResult[0]?.RemainingBalance || 0;
 
-                if (remaining <= 0) {
-                  // 4. Update status to Finished
-                  database.query(
-                    'UPDATE tblloans SET Status = "Finished" WHERE UserID = ? AND Status = "Active"',
-                    [userID],
-                    (err, finishUpdate) => {
-                      if (err) return reject(err);
+          // update loan status if fully paid
+          if (remaining <= 0) {
+          database.query('UPDATE tblloans SET Status = "Finished" WHERE UserID = ? AND Status = "Active"',
+          [userID],
+          (err, finishUpdate) => {
+          if (err) return reject(err);
 
-                      return resolve({
-                        loanUpdated: loanUpdate,
-                        balanceUpdated: balanceUpdate,
-                        loanFinished: true
-                      });
-                    }
-                  );
-                } else {
-                  // Loan not yet fully paid
-                  return resolve({
-                    loanUpdated: loanUpdate,
-                    balanceUpdated: balanceUpdate,
-                    loanFinished: false
-                  });
-                }
-              }
-            );
+          return resolve({
+            loanUpdated: loanUpdate,
+            balanceUpdated: balanceUpdate,
+            loanFinished: true
+          });
           }
-        );
+          );
+          } else {
+              return resolve({
+                loanUpdated: loanUpdate,
+                balanceUpdated: balanceUpdate,
+                loanFinished: false
+              });
+            }
+          }
+          )
+          }
+      );
       }
     );
   });

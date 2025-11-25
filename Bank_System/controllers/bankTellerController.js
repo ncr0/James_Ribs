@@ -1,4 +1,5 @@
 const Admin = require('../models/bankTellerModel');
+const User = require('../models/userModel');
 
 const bankTellerController = {
   // Get All Users
@@ -127,7 +128,8 @@ const bankTellerController = {
       res.json({
         success: true,
         message: 'User deleted successfully',
-        user: [user.UserID, user.FullName]
+        UserID: user.UserID,
+        FullName: user.FullName
       });
     } catch (error) {
       res.status(500).json({
@@ -138,12 +140,123 @@ const bankTellerController = {
     }
   },
 
-  // Approve Deposit - to be added later
+  // Approve Deposit 
+  approveDeposit: async (req, res) => {
+    try {
+      const { transactionID } = req.params;
+      const transactionStatus = await Admin.getTransactionByTransactionID(transactionID);
 
-  // Approve Withdrawal - to be added later
+      if(transactionStatus.Type !== 'Deposit') {
+        return  res.status(400).json({
+          success: false,
+          message: 'Transaction is not a Deposit type'
+        });
+      }
+      if(transactionStatus.Status === 'Approved') {
+        return  res.status(400).json({
+          success: false,
+          message: 'Transaction already approved'
+        });
+      }
+      
 
-  // Approve Loan - to be added later
+      const transactionData = await Admin.approveDeposit(transactionID);
+    
+      
+      res.json({
+        success: true,
+        message: 'Deposit approved successfully',
+        data: transactionData
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error approving Deposit',
+        error: error.message
+      });
+    }
+  },
+  // Approve Withdrawal
+  approveWithdrawal: async (req, res) => {
+    try {
+      const { transactionID } = req.params;
+      const transactionStatus = await Admin.getTransactionByTransactionID(transactionID);
 
+      if(transactionStatus.Type !== 'Withdrawal') {
+        return  res.status(400).json({
+          success: false,
+          message: 'Transaction is not a Withdrawal type'
+        });
+      }
+      if(transactionStatus.Status === 'Approved') {
+        return  res.status(400).json({
+          success: false,
+          message: 'Transaction already approved'
+        });
+      }
+      
+
+      const transactionData = await Admin.approveWithdrawal(transactionID);
+
+      res.json({
+        success: true,
+        message: 'Withdrawal approved successfully',
+        data: transactionData
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error approving Withdrawal',
+        error: error.message
+      });
+    }
+  },
+
+  // Approve Loan 
+  approveLoan: async (req, res) => {
+    try {
+      const userID = req.params.userID;
+      const {InterestRate, totalAmount, MonthlyPayment} = req.body;
+
+      // Check if user exists
+      const existingUser = await Admin.getUserByID(userID);
+      if (!existingUser) {  
+        return res.status(404).json({
+          success: false,
+          message: 'User ID not found'
+        });
+      }
+      // Input Validation
+      if (!InterestRate || !totalAmount || !MonthlyPayment) {
+        return res.status(400).json({
+          success: false,
+          message: ['All fields are required', '(InterestRate, totalAmount, MonthlyPayment)']
+        });
+      }
+      // Loan Status Validation
+      const loanStatus = await Admin.getLoanByID(userID);
+      if(loanStatus.Status === 'Active') {
+        return  res.status(400).json({
+          success: false,
+          message: 'Loan already active'
+        });
+      }
+      const loanData = await Admin.approveLoan(userID, {InterestRate, totalAmount, MonthlyPayment});
+
+      res.json({
+        success: true,
+        message: 'Loan approved successfully',
+        UserID: userID,
+        data: loanData
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error approving Loan',
+        error: error.message
+      });
+    }
+  },
   // Get All Transactions 
     getAllTransactions: async (req, res) => {
     try {
@@ -221,10 +334,10 @@ const bankTellerController = {
       const statusData = await Admin.getTransactionByStatus(status);
       
       // Validation for Type
-      if((status !== 'Pending' && status !== 'pending') && (  status !== 'Approved' && status !== 'approved') && (status !== 'Denied' && status !== 'denied')) {
+      if((status !== 'Pending' && status !== 'pending') && (  status !== 'Approved' && status !== 'approved')) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid Status. Please use pending, approved, or denied.'
+          message: 'Invalid Status. Please use pending or approved'
         });
       }
       // Check if any users found
@@ -292,10 +405,10 @@ const bankTellerController = {
       const statusData = await Admin.getLoanByStatus(status);
       
       // Validation for Type
-      if((status !== 'Pending' && status !== 'pending') && (  status !== 'Active' && status !== 'active') && (status !== 'Denied' && status !== 'denied') && (status !== 'Finished' && status !== 'finished')) {
+      if((status !== 'Pending' && status !== 'pending') && (  status !== 'Active' && status !== 'active') && (status !== 'Finished' && status !== 'finished')) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid Status. Please use pending, active, denied, or finished.'
+          message: 'Invalid Status. Please use pending, active, or finished.'
         });
       }
       // Check if any users found

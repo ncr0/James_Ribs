@@ -107,16 +107,20 @@ viewBalance: async (req, res) => {
             }
             // check pending /active loans
             const pendingLoans = await User.viewPendingLoanById(userID)
+            const activeLoans = await User.viewActiveLoans(userID);
+            if (pendingLoans.length > 0) {
 
-            if (pendingLoans.length === 0) {
-                const activeLoans = await User.viewActiveLoans(userID);
-                if (activeLoans.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You already have an active or pending loan'
+                    });
+
+            } else if (activeLoans.length > 0) {
                     return res.status(400).json({
                     success: false,
                     message: 'You already have an active or pending loan'
                     });
                 }
-            }
             // validation
             if (!LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
                 return res.status(400).json({
