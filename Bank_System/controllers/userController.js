@@ -67,7 +67,7 @@ viewBalance: async (req, res) => {
         if (!FullName|| !Age || !Address || !DateofBirth || !Gender || !ContactNumber || !EmailAddress) {
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required (fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress)'
+                message: 'All fields are required (FullName, Age, Address, DateofBirth, Gender, ContactNumber, EmailAddress)'
             });
         }
         await User.updateAccountInfo(userID, {
@@ -81,7 +81,8 @@ viewBalance: async (req, res) => {
         });
         res.status(200).json({
             success: true,
-            message: 'User account information updated successfully'
+            message: 'User account information updated successfully',
+            
         });
     } catch (error) {
         console.error('Error updating user account information:', error);
@@ -377,7 +378,7 @@ viewBalance: async (req, res) => {
             if (balance < Amount) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Insufficient funds to make the loan payment'
+                    message: [  'Insufficient account funds to pay the loan', `Current Account balance: ${balance}`]
                 });
             }
             // check if payment exceeds remaining balance

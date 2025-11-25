@@ -1,5 +1,4 @@
 const Admin = require('../models/bankTellerModel');
-const User = require('../models/userModel');
 
 const bankTellerController = {
   // Get All Users
