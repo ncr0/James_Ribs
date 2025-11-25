@@ -6,7 +6,6 @@ const User = {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
-        // if (results.length === 0) return resolve(null);
         resolve(results[0]);
       });
     });
@@ -17,7 +16,6 @@ const User = {
     return new Promise((resolve, reject) => {
       database.query('SELECT balance FROM tblusers WHERE UserID = ?', [id], (err, results) => {
         if (err) reject(err);
-        // if (results.length === 0) return resolve(null);
         resolve(results[0]);
       });
     });
@@ -40,9 +38,9 @@ const User = {
   // applyLoan
   applyLoan: (userData) => {
     return new Promise((resolve, reject) => {
-      const {UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status} = userData;
+      const {userID, LoanAmount, MonthsToPay, Reason, MonthlyIncome} = userData;
       database.query('INSERT INTO tblloans (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status) VALUES (?, ?, ?, ?, ?, CURDATE(), "Pending")',
-    [UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Date, Status],
+    [userID, LoanAmount, MonthsToPay, Reason, MonthlyIncome],
       (err, results) => {
         if (err) reject(err);
         resolve({id: results.insertId, ...userData});
@@ -50,18 +48,19 @@ const User = {
       );
     });
   },
-  //deposit
+  // Deposit
   deposit: (transactionData) => {
     return new Promise((resolve, reject) => {
-      const {UserID, FullName, Email, Amount, Type, Status, DateofTransaction} = transactionData;
+      const {userID, FullName, Email, Amount} = transactionData;
       database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "Deposit", "Pending", CURDATE())', 
-        [UserID, FullName, Email, Amount, Type, Status, DateofTransaction], 
+        [userID, FullName, Email, Amount], 
         (err, results) => {
         if (err) reject(err);
-        resolve({id: results.insertId, ...transactionData});
+        resolve({TransactionID: results.insertId, ...transactionData});
       });
     });
   },
+  // View Pending Deposit
   viewPendingDeposit: (id) => {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Deposit" AND Status = "Pending"', [id], (err, results) => {
@@ -70,18 +69,19 @@ const User = {
       });
     })
   },
-  //withdraw
+  // Withdraw
   withdraw: (transactionData) => { 
     return new Promise((resolve, reject) => {
-      const {UserID, FullName, Email, Amount, Type, Status, DateofTransaction} = transactionData;
-      database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "WITHDRAWAL", "Pending", CURDATE())', 
-        [UserID, FullName, Email, Amount, Type, Status, DateofTransaction], 
+      const {userID, FullName, Email, Amount} = transactionData;
+      database.query('Insert INTO tbltransactions (UserID, FullName, Email, Amount, Type, Status, DateofTransaction) VALUES (?, ?, ?, ?, "Withdrawal", "Pending", CURDATE())', 
+        [userID, FullName, Email, Amount], 
         (err, results) => {
         if (err) reject(err);
-        resolve({id: results.insertId, ...transactionData});
+        resolve({TransactionID: results.insertId, ...transactionData});
       });
     });
   },
+  // View Pending Withdrawal
   viewPendingWithdrawal: (id) => {
     return new Promise((resolve, reject) => {
       database.query('SELECT * FROM tbltransactions WHERE UserID = ? AND Type = "Withdrawal" AND Status = "Pending"', [id], (err, results) => {
@@ -117,32 +117,63 @@ const User = {
       });
     })
   },
-  // pay loan 
+  // Pay loan 
   payLoan: (userID, loanData) => {
-    const {Amount} = loanData;
-    return new Promise((resolve, reject) => {
-      
-      // update loan remaining balance
-        database.query('UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
-      [Amount, userID],
-      (err, loanResult) => {
-        if (err) return reject(err);
+  const { Amount } = loanData;
 
-        // update user balance
-        database.query('UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
+  return new Promise((resolve, reject) => {
+
+    // update loan remaining balance
+    database.query('UPDATE tblloans SET RemainingBalance = RemainingBalance - ? WHERE UserID = ? AND Status = "Active"',
+      [Amount, userID],
+      (err, loanUpdate) => {
+      if (err) return reject(err);
+
+      // update user balance
+      database.query('UPDATE tblusers SET Balance = Balance - ? WHERE UserID = ?',
           [Amount, userID],
-          (err, userResult) => {
-            if (err) return reject(err);
-            resolve({
-              loanUpdated: loanResult,
-              balanceUpdated: userResult
-            });
+          (err, balanceUpdate) => {
+          if (err) return reject(err);
+
+            // check balance
+          database.query('SELECT RemainingBalance FROM tblloans WHERE UserID = ? AND Status = "Active"',
+          [userID],
+          (err, checkResult) => {
+          if (err) return reject(err);
+
+          const remaining = checkResult[0]?.RemainingBalance || 0;
+
+          // update loan status if fully paid
+          if (remaining <= 0) {
+          database.query('UPDATE tblloans SET Status = "Finished" WHERE UserID = ? AND Status = "Active"',
+          [userID],
+          (err, finishUpdate) => {
+          if (err) return reject(err);
+
+          return resolve({
+            loanUpdated: loanUpdate,
+            balanceUpdated: balanceUpdate,
+            loanFinished: true
+          });
           }
-        );
+          );
+          } else {
+              return resolve({
+                loanUpdated: loanUpdate,
+                balanceUpdated: balanceUpdate,
+                loanFinished: false
+              });
+            }
+          }
+          )
+          }
+      );
       }
-    )
-  })
-  }
+    );
+  });
+
+  },
+  // updateLoanstatus
 }
 
 

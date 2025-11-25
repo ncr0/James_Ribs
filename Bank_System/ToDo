@@ -10,29 +10,31 @@
   viewTransactions - DONE
     - add empty result handling - DONE
     - added user validation - DONE
-    - add pending transactions -
+    - add pending transactions - DONE
   viewPendingLoan - DONE
     - add empty result handling - DONE
     - added user validation - DONE
   viewActiveLoan - DONE
   payLoan - DONE
+    - auto update status if fully paid - DONE
+
 
 -ADMIN-
-  getUsers
-    -by ID
-    -by Status
-  addUser
-  deleteUser
-  approveDeposit
-  approveWithdrawal
-  approveLoan
-  getTransactions
-    -by ID
-    -by Type
-    -by Status
-  getLoans
-    -by Status
-    -by ID
+  getUsers - DONE
+    -by ID - DONE
+    -by Status - DONE
+  addUser - DONE
+  deleteUser - DONE
+  approveDeposit -  DONE
+  approveWithdrawal - DONE
+  approveLoan - DONE
+  getTransactions - DONE
+    -by ID - DONE
+    -by Type - DONE
+    -by Status - DONE
+  getLoans - DONE
+    -by Status - DONE
+    -by ID - DONE
 
 
 

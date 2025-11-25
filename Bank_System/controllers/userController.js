@@ -5,7 +5,6 @@ const userController = {
 //Get Account Details
 getAccountDetails: async (req, res) => {
     try {
-        // const { UserID } = req.params;
       const details = await User.getAccount(req.params.userID);
       if (!details) {
         return res.status(404).json({
@@ -28,7 +27,6 @@ getAccountDetails: async (req, res) => {
 // viewBalance
 viewBalance: async (req, res) => {
   try {
-    //const userId = req.params.id; 
     const balance = await User.viewBalanceById(req.params.userID);
 
     if (!balance) {
@@ -69,7 +67,7 @@ viewBalance: async (req, res) => {
         if (!FullName|| !Age || !Address || !DateofBirth || !Gender || !ContactNumber || !EmailAddress) {
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required (fullName, age, address, dateOfBirth, gender, contactNumber, emailAddress)'
+                message: 'All fields are required (FullName, Age, Address, DateofBirth, Gender, ContactNumber, EmailAddress)'
             });
         }
         await User.updateAccountInfo(userID, {
@@ -83,7 +81,8 @@ viewBalance: async (req, res) => {
         });
         res.status(200).json({
             success: true,
-            message: 'User account information updated successfully'
+            message: 'User account information updated successfully',
+            
         });
     } catch (error) {
         console.error('Error updating user account information:', error);
@@ -97,7 +96,7 @@ viewBalance: async (req, res) => {
     //applyLoan
     applyLoan: async (req, res) => {
         try {
-            const {UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status} = req.body;
+            const {LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status} = req.body;
             const userID = req.params.userID;
             // user checker
             const existingUser = await User.getAccount(userID);
@@ -109,21 +108,25 @@ viewBalance: async (req, res) => {
             }
             // check pending /active loans
             const pendingLoans = await User.viewPendingLoanById(userID)
+            const activeLoans = await User.viewActiveLoans(userID);
+            if (pendingLoans.length > 0) {
 
-            if (pendingLoans.length === 0) {
-                const activeLoans = await User.viewActiveLoans(userID);
-                if (activeLoans.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You already have an active or pending loan'
+                    });
+
+            } else if (activeLoans.length > 0) {
                     return res.status(400).json({
                     success: false,
                     message: 'You already have an active or pending loan'
                     });
                 }
-            }
             // validation
-            if (!UserID || !LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
+            if (!LoanAmount || !MonthsToPay || !Reason || !MonthlyIncome) {
                 return res.status(400).json({
                     success: false,
-                    message: 'All fields  are required (UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome)'
+                    message: 'All fields  are required (LoanAmount, MonthsToPay, Reason, MonthlyIncome)'
                 });
             }
             // months to pay limit 3 years (36 months)
@@ -134,7 +137,7 @@ viewBalance: async (req, res) => {
                 });
             }
             const newLoanApplication = await User.applyLoan({
-                UserID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status
+                userID, LoanAmount, MonthsToPay, Reason, MonthlyIncome, Status
             });
             res.status(201).json({
                 success: true,
@@ -153,11 +156,11 @@ viewBalance: async (req, res) => {
     // deposit
     deposit: async (req, res) => {
         try {
-            const {UserID,FullName, Email, Amount} = req.body;
+            const {FullName, Email, Amount} = req.body;
             const userID = req.params.userID;
             // check user
             const user = await User.getAccount(userID);
-                if (!user || user.UserID != UserID) {
+                if (!user) {
                     return res.status(404).json({
                         success: false,
                         message: ["User not found or does", "not match with the UserID in the body"]
@@ -187,7 +190,7 @@ viewBalance: async (req, res) => {
                 });
             }
              
-            const result = await User.deposit({UserID, FullName, Email, Amount});
+            const result = await User.deposit({userID, FullName, Email, Amount});
             res.status(200).json({ 
                 success: true,
                 message: 'Deposit Pending Approval', 
@@ -203,11 +206,11 @@ viewBalance: async (req, res) => {
     //withdraw
     withdraw: async (req, res) => {
         try {
-            const {UserID,FullName, Email, Amount} = req.body;
+            const {FullName, Email, Amount} = req.body;
             const userID = req.params.userID;
             // check user
             const user = await User.getAccount(userID);
-                if (!user || user.UserID != UserID) {
+                if (!user) {
                     return res.status(404).json({
                         success: false,
                         message: ["User not found", "or does not match with the UserID in the body"]
@@ -238,7 +241,7 @@ viewBalance: async (req, res) => {
                 });
             }
              
-            const result = await User.withdraw({UserID, FullName, Email, Amount});
+            const result = await User.withdraw({userID, FullName, Email, Amount});
             res.status(200).json({ 
                 success: true,
                 message: ['Withdrawal Pending for Approval', 'please go to the nearest bank to receive your cash'], 
@@ -375,7 +378,7 @@ viewBalance: async (req, res) => {
             if (balance < Amount) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Insufficient funds to make the loan payment'
+                    message: [  'Insufficient account funds to pay the loan', `Current Account balance: ${balance}`]
                 });
             }
             // check if payment exceeds remaining balance
